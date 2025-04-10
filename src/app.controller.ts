@@ -154,6 +154,7 @@ export class AppController {
         bio: userBio.bio,
         name: 'test',
         name2: 'test2',
+        name3: 'test3',
         user: {
           connect: {
             id: Number(id),
