@@ -6,7 +6,7 @@
   "license": "UNLICENSED",
   "author": "",
   "scripts": {
-    "migrate":"npx prisma migrate dev",
+    "migrate":"npx prisma migrate dev --name dev",
     "prebuild": "rimraf dist",
     "build": "nest build",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
