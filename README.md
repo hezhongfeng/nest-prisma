@@ -1,354 +1,85 @@
-# REST API Example
+# prisma-examples
 
-This example shows how to implement a **REST API** using [NestJS](https://docs.nestjs.com/) and [Prisma Client](https://www.prisma.io/docs/concepts/components/prisma-client). The example uses an SQLite database file with some initial dummy data which you can find at [`./prisma/dev.db`](./prisma/dev.db). The example was bootstrapped using the NestJS CLI command `nest new nest`.
+一个 TS 环境的ORM，官方推荐使用 postgres 数据库
 
-## Getting started
+## 安装 prisma
 
-### 1. Download example and navigate into the project directory
+给一个 nestjs 项目添加 prisma
 
-Download this example:
-
-```
-npx try-prisma@latest --template orm/nest
+```bash
+npm install prisma --save-dev
 ```
 
-Then, navigate into the project directory:
+接着运行 prisma 初始化
 
-```
-cd nest
-```
-
-<details><summary><strong>Alternative:</strong> Clone the entire repo</summary>
-
-Clone this repository:
-
-```
-git clone git@github.com:prisma/prisma-examples.git --depth=1
+```bash
+npx prisma init
 ```
 
-Install npm dependencies:
+这会生成两个文件
 
-```
-cd prisma-examples/orm/nest
-npm install
-```
+- `prisma/schema.prisma` // 数据库模型
+- `.env` // 数据库连接信息，这个文件会被 git 忽略，属于本地的文件，各个不同的环境下的数据库连接信息需要自己配置
 
-</details>
+.env文件
 
-#### [Optional] Switch database to Prisma Postgres
-
-This example uses a local SQLite database by default. If you want to use to [Prisma Postgres](https://prisma.io/postgres), follow these instructions (otherwise, skip to the next step):
-
-1. Set up a new Prisma Postgres instance in the Prisma Data Platform [Console](https://console.prisma.io) and copy the database connection URL.
-2. Update the `datasource` block to use `postgresql` as the `provider` and paste the database connection URL as the value for `url`:
-    ```prisma
-    datasource db {
-      provider = "postgresql"
-      url      = "prisma+postgres://accelerate.prisma-data.net/?api_key=ey...."
-    }
-    ```
-
-    > **Note**: In production environments, we recommend that you set your connection URL via an [environment variable](https://www.prisma.io/docs/orm/more/development-environment/environment-variables/managing-env-files-and-setting-variables), e.g. using a `.env` file.
-3. Install the Prisma Accelerate extension:
-    ```
-    npm install @prisma/extension-accelerate
-    ```
-4. Add the Accelerate extension to the `PrismaClient` instance:
-    ```diff
-    + import { withAccelerate } from "@prisma/extension-accelerate"
-
-    + const prisma = new PrismaClient().$extends(withAccelerate())
-    ```
-
-That's it, your project is now configured to use Prisma Postgres!
-
-### 2. Create and seed the database
-
-Run the following command to create your database. This also creates the `User` and `Post` tables that are defined in [`prisma/schema.prisma`](./prisma/schema.prisma):
-
-```
-npx prisma migrate dev --name init
+```bash
+DATABASE_URL="postgresql://hezf:@localhost:5432/prisma-pro?schema=public"
 ```
 
-When `npx prisma migrate dev` is executed against a newly created database, seeding is also triggered. The seed file in [`prisma/seed.ts`](./prisma/seed.ts) will be executed and your database will be populated with the sample data.
+prisma/schema.prisma 文件
 
-**If you switched to Prisma Postgres in the previous step**, you need to trigger seeding manually (because Prisma Postgres already created an empty database instance for you, so seeding isn't triggered):
+```bash
+generator client {
+  provider = "prisma-client-js"
+}
 
-```
-npx prisma db seed
-```
-
-
-### 3. Start the REST API server
-
-```
-npm run dev
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
 ```
 
-The server is now running on `http://localhost:3000`. You can now run the API requests, e.g. [`http://localhost:3000/feed`](http://localhost:3000/feed).
+## prisma model
 
-## Using the REST API
+接下来定义数据库模型
 
-You can access the REST API of the server using the following endpoints:
-
-### `GET`
-
-- `/post/:id`: Fetch a single post by its `id`
-- `/feed?searchString={searchString}&take={take}&skip={skip}&orderBy={orderBy}`: Fetch all _published_ posts
-  - Query Parameters
-    - `searchString` (optional): This filters posts by `title` or `content`
-    - `take` (optional): This specifies how many objects should be returned in the list
-    - `skip` (optional): This specifies how many of the returned objects in the list should be skipped
-    - `orderBy` (optional): The sort order for posts in either ascending or descending order. The value can either `asc` or `desc`
-- `/user/:id/drafts`: Fetch user's drafts by their `id`
-- `/users`: Fetch all users
-### `POST`
-
-- `/post`: Create a new post
-  - Body:
-    - `title: String` (required): The title of the post
-    - `content: String` (optional): The content of the post
-    - `authorEmail: String` (required): The email of the user that creates the post
-- `/signup`: Create a new user
-  - Body:
-    - `email: String` (required): The email address of the user
-    - `name: String` (optional): The name of the user
-    - `postData: PostCreateInput[]` (optional): The posts of the user
-
-### `PUT`
-
-- `/publish/:id`: Toggle the publish value of a post by its `id`
-- `/post/:id/views`: Increases the `viewCount` of a `Post` by one `id`
-
-### `DELETE`
-
-- `/post/:id`: Delete a post by its `id`
-
-
-## Evolving the app
-
-Evolving the application typically requires two steps:
-
-1. Migrate your database using Prisma Migrate
-1. Update your application code
-
-For the following example scenario, assume you want to add a "profile" feature to the app where users can create a profile and write a short bio about themselves.
-
-### 1. Migrate your database using Prisma Migrate
-
-The first step is to add a new table, e.g. called `Profile`, to the database. You can do this by adding a new model to your [Prisma schema file](./prisma/schema.prisma) file and then running a migration afterwards:
-
-```diff
-// ./prisma/schema.prisma
-
+```bash
 model User {
-  id      Int      @default(autoincrement()) @id
-  name    String?
-  email   String   @unique
-  posts   Post[]
-+ profile Profile?
+  id    Int     @default(autoincrement()) @id
+  email String  @unique
+  name  String?
+  posts Post[]
 }
 
 model Post {
-  id        Int      @id @default(autoincrement())
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id        Int      @default(autoincrement()) @id
   title     String
   content   String?
-  published Boolean  @default(false)
-  viewCount Int      @default(0)
+  published Boolean? @default(false)
   author    User?    @relation(fields: [authorId], references: [id])
   authorId  Int?
 }
-
-+model Profile {
-+  id     Int     @default(autoincrement()) @id
-+  bio    String?
-+  user   User    @relation(fields: [userId], references: [id])
-+  userId Int     @unique
-+}
 ```
 
-Once you've updated your data model, you can execute the changes against your database with the following command:
+现在定义完了数据库模型，我们可以使用 prisma 命令来生成数据库模型
 
-```
-npx prisma migrate dev --name add-profile
-```
-
-This adds another migration to the `prisma/migrations` directory and creates the new `Profile` table in the database.
-
-### 2. Update your application code
-
-You can now use your `PrismaClient` instance to perform operations against the new `Profile` table. Those operations can be used to implement API endpoints in the REST API.
-
-#### 2.1 Add the API endpoint to your app
-
-Update your `AppController` class inside `app.controller.ts` file by adding a new endpoint to your API:
-
-```ts
-@Post('user/:id/profile')
-async createUserProfile(
-  @Param('id') id: string,
-  @Body() userBio: { bio: string }
-): Promise<Profile> {
-  return this.prismaService.profile.create({
-    data: {
-      bio: userBio.bio,
-      user: {
-        connect: {
-          id: Number(id)
-        }
-      }
-    }
-  })
-}
+```bash
+npx prisma migrate dev --name init
 ```
 
-At the top of `app.controller.ts`, update your imports to include `Profile` from `@prisma/client` as follows:
+这时候会生成一个迁移的 sql 文件
 
-```ts
-import { User as UserModel, Post as PostModel, Prisma, Profile } from '@prisma/client'
+```bash
+prisma
+├── migrations
+│   └── 20201207100915_init
+│       └── migration.sql
+└── schema.prisma
 ```
 
-#### 2.2 Testing out your new endpoint
+检查数据库，会发现已经生成了对应的表；接下来我们通过 prisma-client 来操作数据库
 
-Restart your application server and test out your new endpoint.
-
-##### `POST`
-
-- `/user/:id/profile`: Create a new profile based on the user id
-  - Body:
-    - `bio: String` : The bio of the user
-
-
-<details><summary>Expand to view more sample Prisma Client queries on <code>Profile</code></summary>
-
-Here are some more sample Prisma Client queries on the new <code>Profile</code> model:
-
-##### Create a new profile for an existing user
-
-```ts
-const profile = await prisma.profile.create({
-  data: {
-    bio: 'Hello World',
-    user: {
-      connect: { email: 'alice@prisma.io' },
-    },
-  },
-})
+```bash
+npm install @prisma/client
 ```
-
-##### Create a new user with a new profile
-
-```ts
-const user = await prisma.user.create({
-  data: {
-    email: 'john@prisma.io',
-    name: 'John',
-    profile: {
-      create: {
-        bio: 'Hello World',
-      },
-    },
-  },
-})
-```
-
-##### Update the profile of an existing user
-
-```ts
-const userWithUpdatedProfile = await prisma.user.update({
-  where: { email: 'alice@prisma.io' },
-  data: {
-    profile: {
-      update: {
-        bio: 'Hello Friends',
-      },
-    },
-  },
-})
-```
-
-</details>
-
-## Switch to another database (e.g. PostgreSQL, MySQL, SQL Server, MongoDB)
-
-If you want to try this example with another database than SQLite, you can adjust the the database connection in [`prisma/schema.prisma`](./prisma/schema.prisma) by reconfiguring the `datasource` block.
-
-Learn more about the different connection configurations in the [docs](https://www.prisma.io/docs/reference/database-reference/connection-urls).
-
-<details><summary>Expand for an overview of example configurations with different databases</summary>
-
-### PostgreSQL
-
-For PostgreSQL, the connection URL has the following structure:
-
-```prisma
-datasource db {
-  provider = "postgresql"
-  url      = "postgresql://USER:PASSWORD@HOST:PORT/DATABASE?schema=SCHEMA"
-}
-```
-
-Here is an example connection string with a local PostgreSQL database:
-
-```prisma
-datasource db {
-  provider = "postgresql"
-  url      = "postgresql://janedoe:mypassword@localhost:5432/notesapi?schema=public"
-}
-```
-
-### MySQL
-
-For MySQL, the connection URL has the following structure:
-
-```prisma
-datasource db {
-  provider = "mysql"
-  url      = "mysql://USER:PASSWORD@HOST:PORT/DATABASE"
-}
-```
-
-Here is an example connection string with a local MySQL database:
-
-```prisma
-datasource db {
-  provider = "mysql"
-  url      = "mysql://janedoe:mypassword@localhost:3306/notesapi"
-}
-```
-
-### Microsoft SQL Server
-
-Here is an example connection string with a local Microsoft SQL Server database:
-
-```prisma
-datasource db {
-  provider = "sqlserver"
-  url      = "sqlserver://localhost:1433;initial catalog=sample;user=sa;password=mypassword;"
-}
-```
-
-### MongoDB
-
-Here is an example connection string with a local MongoDB database:
-
-```prisma
-datasource db {
-  provider = "mongodb"
-  url      = "mongodb://USERNAME:PASSWORD@HOST/DATABASE?authSource=admin&retryWrites=true&w=majority"
-}
-```
-
-</details>
-
-## Next steps
-
-- Check out the [Prisma docs](https://www.prisma.io/docs)
-- [Join our community on Discord](https://pris.ly/discord?utm_source=github&utm_medium=prisma_examples&utm_content=next_steps_section) to share feedback and interact with other users.
-- [Subscribe to our YouTube channel](https://pris.ly/youtube?utm_source=github&utm_medium=prisma_examples&utm_content=next_steps_section) for live demos and video tutorials.
-- [Follow us on X](https://pris.ly/x?utm_source=github&utm_medium=prisma_examples&utm_content=next_steps_section) for the latest updates.
-- Report issues or ask [questions on GitHub](https://pris.ly/github?utm_source=github&utm_medium=prisma_examples&utm_content=next_steps_section).
-
-
