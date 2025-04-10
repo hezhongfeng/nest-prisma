@@ -27,7 +27,6 @@ CREATE TABLE "Profile" (
     "bio" TEXT,
     "name" TEXT NOT NULL DEFAULT '老何',
     "name2" TEXT NOT NULL DEFAULT '老何2',
-    "name3" TEXT NOT NULL DEFAULT '老何3',
     "userId" INTEGER NOT NULL,
 
     CONSTRAINT "Profile_pkey" PRIMARY KEY ("id")
