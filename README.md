@@ -73,7 +73,7 @@ npx prisma migrate dev --name init
 ```bash
 prisma
 ├── migrations
-│   └── 20201207100915_init
+│   └── 20250411005120_init
 │       └── migration.sql
 └── schema.prisma
 ```
@@ -317,3 +317,47 @@ export class AppController {
 }
 
 ```
+
+以上就完成了一个简单的 nestjs 项目，这里创建了两个服务 `user.service.ts` 和 `post.service.ts`，可以在 controller 层调用的更舒心一些，和 nestjs 的范式一致。
+
+## 迁移
+
+上面我们在运行 `npx prisma migrate dev --name init`的时候，会生成一个迁移的 sql 文件，这个文件是用来记录数据库的迁移历史的，我们可以通过这个文件来回滚数据库。
+
+在日常开发中，我们可能会修改数据库模型，比如给 user 添加一个电话号码的字段：
+
+```typescript
+model User {
+  id    Int     @id @default(autoincrement())
+  email String  @unique
+  name  String?
+  tel   String?
+  posts Post[]
+}
+```
+
+修改完之后，本地运行这个项目，这个时候我们发现，只修改这里没有用，数据库的结构没有变化。需要重新生成迁移文件，然后运行迁移文件，这个时候我们可以使用以下命令：
+
+```bash
+npx prisma migrate dev --name add-tel
+```
+
+运行之后我们会发现，数据库的结构已经变化了，并且生成了一个新的迁移文件 `prisma/migrations/20250411021730_add_tel`，里面的内容是:
+
+```sql
+-- AlterTable
+ALTER TABLE "User" ADD COLUMN     "tel" TEXT;
+```
+
+此时再来看看引入的 `import { User, Prisma } from '@prisma/client';` ，会发现 `User` 模型中已经有了 `tel` 字段了，在运行上面的命令之前是没有的；
+
+这里有一个问题，以上的改动都是在本地 `node_modules` 目录下的 `index.d.ts`体现的，相当于修改了本地的文件，不过这份文件不会被 git 跟踪，所以不会被提交到 git 仓库。发版的时候怎么办呢？本地开发环境的`node_modules` 目录下的 `index.d.ts`和目标环境的`node_modules` 目录下的 `index.d.ts`是不一致的，所以我们需要手动同步一下。
+
+发版的时候，需要执行以下命令去迁移合并：
+
+```bash
+npx prisma migrate deploy
+## 注意：迁移部署通常应该是自动化CI/CD管道的一部分，我们不建议在本地运行此命令以将更改部署到生产数据库。
+```
+
+这样就可以完成模型变化的迁移了
