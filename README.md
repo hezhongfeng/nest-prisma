@@ -19,9 +19,9 @@ npx prisma init
 这会生成两个文件
 
 - `prisma/schema.prisma` // 数据库模型
-- `.env` // 数据库连接信息，这个文件会被 git 忽略，属于本地的文件，各个不同的环境下的数据库连接信息需要自己配置
+- `.env` // 数据库连接信息，这个文件会被 git 忽略，属于本地的文件，不上传到 git 仓库，各个不同的环境下的数据库连接信息需要自己配置
 
-.env文件
+.env 文件
 
 ```bash
 DATABASE_URL="postgresql://hezf:@localhost:5432/prisma-pro?schema=public"
@@ -78,7 +78,11 @@ prisma
 └── schema.prisma
 ```
 
-检查数据库，会发现已经生成了对应的表；接下来我们通过 prisma-client 来操作数据库
+检查数据库，会发现已经生成了对应的表
+
+## prisma-client
+
+接下来我们通过 prisma-client 来操作数据库
 
 ```bash
 npm install @prisma/client
