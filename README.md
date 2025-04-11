@@ -320,7 +320,7 @@ export class AppController {
 
 以上就完成了一个简单的 nestjs 项目，这里创建了两个服务 `user.service.ts` 和 `post.service.ts`，可以在 controller 层调用的更舒心一些，和 nestjs 的范式一致。
 
-## 迁移
+## 迁移和发版
 
 上面我们在运行 `npx prisma migrate dev --name init`的时候，会生成一个迁移的 sql 文件，这个文件是用来记录数据库的迁移历史的，我们可以通过这个文件来回滚数据库。
 
