@@ -1,10 +1,17 @@
-# prisma-examples
+# nest-prisma
 
-一个 TS 环境的ORM，官方推荐使用 postgres 数据库
+以前一直使用的是 typeorm 搭配 nestjs，但是 typeorm 有一些缺点，比如：
+
+- 复杂查询需依赖 createQueryBuilder，代码很长很难写
+- findOne有时出错后会返回第一条记录，这个有时候很难注意到
+- 迁移发版的时候风险很大，容易丢失数据，因为都是直接同步模型的变化
+- 社区活跃度下降，更新频率较低，基本没有啥更新了
+
+所以想尝试下别的 ORM，Prisma 是一个不错的选择，用的人比较多：是一个新一代的 Node.js 和 TypeScript ORM，它通过直观的数据模型、自动化迁移、类型安全和自动补全，在数据库操作方面解锁了全新的开发者体验。支持大多数的主流数据库，包括 PostgreSQL、MySQL、SQLite 和 MongoDB。
 
 ## 安装 prisma
 
-给一个 nestjs 项目添加 prisma
+首先用 `@nestjs/cli` 创建一个新的 nestjs 项目后，接着添加 prisma
 
 ```bash
 npm install prisma --save-dev
@@ -361,3 +368,7 @@ npx prisma migrate deploy
 ```
 
 这样就可以完成模型变化的迁移了
+
+## 数据库的迁移历史
+
+在我们第一次运行 `npx prisma migrate dev --name init`的时候，在数据库除了会生成对应的 model 的表结构，还有一个 `_prisma_migrations` 表，这个表是用来记录数据库的迁移历史的。打开之后，里面记录着所有的迁移历史，包括第一次的 `init` 迁移和后续的 `add-tel` 迁移。这样就能保证数据库的一致性，知道哪些迁移是新增的，哪些是已经存在的。这在我们发版的时候非常有用，生产环境的数据库会告诉 Prisma 哪些迁移还没处理，保证数据库的一致性。
